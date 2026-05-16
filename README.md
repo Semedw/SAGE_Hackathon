@@ -1,0 +1,176 @@
+# InsureCheck AI
+
+AI-powered insurance application document verification system. Automates first-stage document review, scoring, and prioritization.
+
+## Architecture
+
+```
+┌─────────────────┐     HTTP/JSON      ┌─────────────────┐
+│   Next.js 14    │ ◄──────────────► │   Django 5 + DRF  │
+│   (Frontend)    │    JWT Auth       │   (Backend API)   │
+│   Port 3000     │                   │   Port 8000       │
+└─────────────────┘                    └────────┬────────┘
+                                                │
+                                         ┌──────▼──────┐
+                                         │ PostgreSQL 16 │
+                                         │   Port 5433   │
+                                         └──────────────┘
+```
+
+## Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 20+
+- Python 3.12+
+
+### Option 1: Docker (Recommended)
+
+```bash
+docker compose up --build
+```
+
+This starts all 3 services. Access:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/api
+- Django Admin: http://localhost:8000/admin/
+
+### Option 2: Local Development
+
+#### Backend
+
+```bash
+# 1. Start PostgreSQL (Docker)
+docker compose up -d db
+
+# 2. Set up Python
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Run migrations & seed data
+python manage.py migrate
+python manage.py seed_demo
+
+# 4. Start server
+python manage.py runserver 0.0.0.0:8000
+```
+
+#### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Demo Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| Applicant | john@example.com | password123 |
+| Reviewer | reviewer@example.com | password123 |
+| Admin | admin@example.com | password123 |
+
+## Demo Applications (Seeded)
+
+1. **John Smith** (Good) — Score ~92, LOW risk. All documents present and consistent.
+2. **Maria Garcia** (Incomplete) — Score ~55, MEDIUM risk. Missing income proof.
+3. **Robert Chen** (Fraud-risk) — Score ~38, HIGH risk. Name/address mismatches.
+4. **Lisa Wong** (Blurry) — Score ~48, HIGH risk. Low quality/blurry images.
+
+## Project Structure
+
+```
+insurecheck-ai/
+├── backend/                    # Django REST API
+│   ├── config/                 # Django settings/urls
+│   ├── apps/
+│   │   ├── users/              # Auth (register/login/JWT)
+│   │   ├── applications/       # Application CRUD + seed data
+│   │   ├── documents/          # Upload + OCR trigger
+│   │   ├── evaluations/        # Scoring engine (5 criteria)
+│   │   │   └── engine/         # Criteria evaluators
+│   │   ├── reviewer/           # Reviewer actions + audit logs
+│   │   ├── notifications/      # In-app notifications
+│   │   └── analytics/          # Dashboard stats
+│   └── services/               # OCR, image quality, audit
+├── frontend/                   # Next.js SPA
+│   └── src/
+│       ├── app/                # Pages (8 routes)
+│       ├── components/         # shadcn/ui components
+│       └── lib/                # API client, auth, utils
+├── docker-compose.yml
+└── .env.example
+```
+
+## API Endpoints
+
+### Auth
+- `POST /api/auth/register/` — Create account
+- `POST /api/auth/login/` — Get JWT tokens
+- `GET /api/auth/me/` — Current user
+- `POST /api/auth/refresh/` — Refresh token
+
+### Applications
+- `GET/POST /api/applications/` — List/create applications
+- `GET/PATCH /api/applications/{id}/` — Application detail
+- `POST /api/applications/{id}/documents/` — Upload document
+- `DELETE /api/applications/{id}/documents/{doc_id}/` — Delete document
+- `POST /api/applications/{id}/evaluate/` — Trigger AI evaluation
+- `GET /api/applications/{id}/evaluate/result/` — Get evaluation
+
+### Reviewer
+- `GET /api/reviewer/applications/` — All apps (filtered/sorted)
+- `GET /api/reviewer/applications/{id}/` — Full detail
+- `POST /api/reviewer/applications/{id}/action/` — Approve/reject/correct/escalate
+
+### Notifications
+- `GET /api/notifications/` — User notifications
+- `PATCH /api/notifications/{id}/read/` — Mark as read
+
+### Analytics
+- `GET /api/analytics/dashboard/` — Stats for reviewer dashboard
+
+## Scoring System
+
+| Criterion | Weight | What It Checks |
+|-----------|--------|----------------|
+| Document Completeness | 30% | Required docs present (ID, income, form) |
+| Data Consistency | 20% | Cross-document name/address/date matching |
+| Document Quality | 20% | Blur detection, OCR confidence, resolution |
+| Identity Verification | 15% | ID patterns, name matching, face indicators |
+| Risk Assessment | 15% | Suspicious patterns, tampering flags |
+
+**Risk Levels:** Score ≥80 = LOW, 50–79 = MEDIUM, <50 = HIGH
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16, TypeScript, TailwindCSS, shadcn/ui |
+| Backend | Django 5, DRF, SimpleJWT |
+| Database | PostgreSQL 16 |
+| OCR | Tesseract (pytesseract) |
+| Image Analysis | OpenCV, NumPy |
+| Fuzzy Matching | python-Levenshtein |
+| Containerization | Docker, docker-compose |
+
+## Environment Variables
+
+See `.env.example` for all required variables. Key ones:
+
+```
+POSTGRES_DB=insurecheck
+POSTGRES_USER=insurecheck
+POSTGRES_PASSWORD=insurecheck_secret
+DJANGO_SECRET_KEY=<generate-a-secure-key>
+FRONTEND_URL=http://localhost:3000
+```
+
+## License
+
+MIT — Built for the Insurance Verification Hackathon.
+
+Demo accounts: john@example.com, reviewer@example.com, admin@example.com (password: password123)
