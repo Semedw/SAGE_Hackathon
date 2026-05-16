@@ -6,55 +6,38 @@ AI-powered insurance application document verification system. Automates first-s
 
 ```
 ┌─────────────────┐     HTTP/JSON      ┌─────────────────┐
-│   Next.js 14    │ ◄──────────────► │   Django 5 + DRF  │
+│   Next.js 16    │ ◄──────────────► │   Django 5 + DRF  │
 │   (Frontend)    │    JWT Auth       │   (Backend API)   │
-│   Port 3000     │                   │   Port 8000       │
 └─────────────────┘                    └────────┬────────┘
                                                 │
                                          ┌──────▼──────┐
                                          │ PostgreSQL 16 │
-                                         │   Port 5433   │
                                          └──────────────┘
 ```
 
 ## Quick Start
 
 ### Prerequisites
-- Docker & Docker Compose
 - Node.js 20+
 - Python 3.12+
+- PostgreSQL 16 (local or hosted)
 
-### Option 1: Docker (Recommended)
-
-```bash
-docker compose up --build
-```
-
-This starts all 3 services. Access:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/api
-- Django Admin: http://localhost:8000/admin/
-
-### Option 2: Local Development
+### Local Development
 
 #### Backend
 
 ```bash
-# 1. Start PostgreSQL (Docker)
-docker compose up -d db
-
-# 2. Set up Python
 cd backend
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Run migrations & seed data
-python manage.py migrate
-python manage.py seed_demo
+# Set up your .env (copy from .env.example)
+# Make sure PostgreSQL is running locally
 
-# 4. Start server
-python manage.py runserver 0.0.0.0:8000
+python3 manage.py migrate
+python3 manage.py seed_demo
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
 #### Frontend
@@ -64,6 +47,26 @@ cd frontend
 npm install
 npm run dev
 ```
+
+Access:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/api
+- Django Admin: http://localhost:8000/admin/
+
+### Deploy to Render
+
+1. Push your code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **New → Blueprint** and connect your repo
+4. Render will detect `render.yaml` and create all services automatically:
+   - **insurecheck-db** — Free PostgreSQL database
+   - **insurecheck-api** — Django backend (Python)
+   - **insurecheck-frontend** — Next.js frontend (Node)
+5. After deployment, seed demo data:
+   - Go to the **insurecheck-api** service → Shell tab
+   - Run: `python manage.py seed_demo`
+
+> **Note:** Free tier services spin down after 15 min of inactivity. First request after spin-down takes ~30s.
 
 ## Demo Accounts
 
@@ -95,13 +98,14 @@ insurecheck-ai/
 │   │   ├── reviewer/           # Reviewer actions + audit logs
 │   │   ├── notifications/      # In-app notifications
 │   │   └── analytics/          # Dashboard stats
-│   └── services/               # OCR, image quality, audit
+│   ├── services/               # OCR, image quality, audit
+│   └── build.sh                # Render build script
 ├── frontend/                   # Next.js SPA
 │   └── src/
 │       ├── app/                # Pages (8 routes)
 │       ├── components/         # shadcn/ui components
 │       └── lib/                # API client, auth, utils
-├── docker-compose.yml
+├── render.yaml                 # Render deployment blueprint
 └── .env.example
 ```
 
@@ -155,18 +159,16 @@ insurecheck-ai/
 | OCR | Tesseract (pytesseract) |
 | Image Analysis | OpenCV, NumPy |
 | Fuzzy Matching | python-Levenshtein |
-| Containerization | Docker, docker-compose |
+| Deployment | Render (Blueprint) |
 
 ## Environment Variables
 
 See `.env.example` for all required variables. Key ones:
 
 ```
-POSTGRES_DB=insurecheck
-POSTGRES_USER=insurecheck
-POSTGRES_PASSWORD=insurecheck_secret
+DATABASE_URL=postgresql://user:pass@host:5432/insurecheck
 DJANGO_SECRET_KEY=<generate-a-secure-key>
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=https://your-frontend.onrender.com
 ```
 
 ## License

@@ -12,5 +12,5 @@ urlpatterns = [
     path("api/analytics/", include("apps.analytics.urls")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Always serve media files (Render has ephemeral storage, but needed for demo)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,62 @@
+databases:
+  - name: insurecheck-db
+    plan: free
+    databaseName: insurecheck
+    user: insurecheck
+
+services:
+  # ── Django Backend ──────────────────────────────────────────
+  - type: web
+    name: insurecheck-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: insurecheck-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: RENDER
+        value: "true"
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: insurecheck-frontend
+          property: url
+      - key: CSRF_TRUSTED_ORIGINS
+        fromService:
+          type: web
+          name: insurecheck-frontend
+          property: url
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+
+  # ── Next.js Frontend ────────────────────────────────────────
+  - type: web
+    name: insurecheck-frontend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run render-start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        # Set this manually after first deploy to: https://insurecheck-api.onrender.com/api
+        # Render's fromService can't append a path suffix
+        value: "https://insurecheck-api.onrender.com/api"
+      - key: NODE_VERSION
+        value: "20.11.1"
+      - key: PORT
+        value: "10000"
