@@ -40,7 +40,7 @@ services:
     region: oregon
     rootDir: frontend
     buildCommand: npm install --include=dev && npm run build
-    startCommand: npm run render-start
+    startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
