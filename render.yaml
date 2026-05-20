@@ -12,6 +12,7 @@ services:
     plan: free
     region: oregon
     rootDir: backend
+    dockerfilePath: backend/Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
