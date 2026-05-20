@@ -27,15 +27,9 @@ services:
       - key: RENDER
         value: "true"
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: insurecheck-frontend
-          property: url
+        value: "https://insurecheck-frontend.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
-        fromService:
-          type: web
-          name: insurecheck-frontend
-          property: url
+        value: "https://insurecheck-frontend.onrender.com"
       - key: PYTHON_VERSION
         value: "3.12.3"
 
