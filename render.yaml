@@ -52,3 +52,5 @@ services:
         value: "20.11.1"
       - key: PORT
         value: "10000"
+      - key: HOSTNAME
+        value: "0.0.0.0"
